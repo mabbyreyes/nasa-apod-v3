@@ -46,7 +46,8 @@ public class ImageFragment extends Fragment {
     MainViewModel viewModel = new ViewModelProvider(getActivity()).get(MainViewModel.class);
     viewModel.getApod().observe(getViewLifecycleOwner(), (apod) -> {
       this.apod = apod;
-      contentView.loadUrl(apod.getUrl());
+      // When it gets image, load in web view.
+      viewModel.getImage(apod, contentView::loadUrl);
     });
   }
 

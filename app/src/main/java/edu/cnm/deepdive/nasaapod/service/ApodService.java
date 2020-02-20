@@ -34,6 +34,7 @@ public interface ApodService {
   @GET("planetary/apod")
   Single<Apod> get(@Query("api_key") String apiKey, @Query("date") String date);
 
+  // Retrofit annotation, request pulls bytes of image
   @GET
   Single<ResponseBody> getFile(@Url String url);
 

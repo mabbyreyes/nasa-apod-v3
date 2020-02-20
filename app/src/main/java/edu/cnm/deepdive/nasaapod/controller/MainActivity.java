@@ -39,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
     setupCalendarPicker();
   }
 
+  // shows progress and tells viewmodel to display image for date.
   public void loadApod(Date date) {
     setProgressVisibility(View.VISIBLE);
     viewModel.setApodDate(date);
@@ -89,6 +90,7 @@ public class MainActivity extends AppCompatActivity {
     });
   }
 
+  // when user clicks on calendar and picks ok to date, loads apod method.
   private void setupCalendarPicker() {
     calendar = Calendar.getInstance();
     FloatingActionButton calendarFab = findViewById(R.id.calendar_fab);

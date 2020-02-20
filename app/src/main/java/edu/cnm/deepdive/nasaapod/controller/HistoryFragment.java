@@ -33,7 +33,8 @@ public class HistoryFragment extends Fragment {
     viewModel = new ViewModelProvider(getActivity()).get(MainViewModel.class);
     viewModel.getAllApodSummaries().observe(getViewLifecycleOwner(), (apods) -> {
       ApodRecyclerAdapter adapter = new ApodRecyclerAdapter(getContext(), apods,
-          (v, apod, pos) -> ((MainActivity) getActivity()).loadApod(apod.getDate()));
+          (v, apod, pos) -> ((MainActivity) getActivity()).loadApod(apod.getDate()),
+          viewModel::getImage);
       apodList.setAdapter(adapter);
     });
   }

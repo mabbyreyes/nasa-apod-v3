@@ -15,6 +15,7 @@ import edu.cnm.deepdive.nasaapod.model.entity.Apod;
 import edu.cnm.deepdive.nasaapod.model.entity.Apod.MediaType;
 import edu.cnm.deepdive.nasaapod.model.pojo.ApodWithStats;
 import edu.cnm.deepdive.nasaapod.view.ApodRecyclerAdapter.Holder;
+import io.reactivex.functions.Consumer;
 import java.util.List;
 
 public class ApodRecyclerAdapter extends RecyclerView.Adapter<Holder> {
@@ -22,11 +23,15 @@ public class ApodRecyclerAdapter extends RecyclerView.Adapter<Holder> {
   private final Context context;
   private final List<ApodWithStats> apods;
   private final OnClickListener listener;
+  private final ThumbnailResolver resolver;
 
-  public ApodRecyclerAdapter(Context context, List<ApodWithStats> apods, OnClickListener listener) {
+  // code used when needing URL for single item.
+  public ApodRecyclerAdapter(Context context, List<ApodWithStats> apods,
+      OnClickListener listener, ThumbnailResolver resolver) {
     this.context = context;
     this.apods = apods;
     this.listener = (listener != null) ? listener : (v, apod, pos) -> {};
+    this.resolver = resolver;
   }
 
 
@@ -74,10 +79,18 @@ public class ApodRecyclerAdapter extends RecyclerView.Adapter<Holder> {
           apod.getAccessCount(),
           DateFormat.getMediumDateFormat(context).format(apod.getLastAccess()),
           countQuantity));
+      // Returns one instance of Picasso.
+      Picasso picasso = Picasso.get();
+      // if not image, uses play button image holder.
       if (apod.getApod().getMediaType() == MediaType.IMAGE) {
-        Picasso.get().load(apod.getApod().getUrl()).into(thumbnail);
+        if (resolver != null) {
+          // When it finds URL, take it and place in picasso then load in thumbnail.
+          resolver.apply(apod.getApod(), (path) -> picasso.load(path).into(thumbnail));
+        } else {
+          picasso.load(apod.getApod().getUrl()).into(thumbnail);
+        }
       } else {
-        thumbnail.setImageResource(R.drawable.ic_slow_motion_video);
+        picasso.load(R.drawable.ic_slow_motion_video).into(thumbnail);
       }
       thumbnail.setContentDescription(apod.getApod().getTitle());
       view.setOnClickListener((v) -> listener.onClick(v, apod.getApod(), position));
@@ -89,6 +102,13 @@ public class ApodRecyclerAdapter extends RecyclerView.Adapter<Holder> {
   public interface OnClickListener {
 
     void onClick(View view, Apod apod, int position);
+
+  }
+    // functional interface has one implemented method.
+  @FunctionalInterface
+  public interface ThumbnailResolver {
+    // Thumbnail resolver, adapter doesnt have to know about viewmodel.
+    void apply(Apod apod, Consumer<String> consumer);
 
   }
 

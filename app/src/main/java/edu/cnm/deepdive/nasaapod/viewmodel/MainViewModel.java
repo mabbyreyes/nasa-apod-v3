@@ -19,7 +19,7 @@ import io.reactivex.schedulers.Schedulers;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
-
+// Implements indicates its a lifetime observer.
 public class MainViewModel extends AndroidViewModel implements LifecycleObserver {
 
   private final MutableLiveData<Apod> apod;
@@ -56,16 +56,31 @@ public class MainViewModel extends AndroidViewModel implements LifecycleObserver
     return throwable;
   }
 
+  // Puts in live data, if fails, puts in throwable.
   public void setApodDate(Date date) {
     throwable.setValue(null);
     pending.add(
+        // The "get" gets apod image for date.
         repository.get(date)
             .doOnSuccess(apod::postValue)
             .doOnError(throwable::postValue)
+            // Returns disposable object.
             .subscribe()
     );
   }
 
+  // Invokes consumer with new image.
+  public void getImage(@NonNull Apod apod, @NonNull Consumer<String> pathConsumer) {
+    // When starting new task, clear bucket so no error messages left behind.
+    throwable.setValue(null);
+      // Asks repository for image. If success, executes consumer, then run.
+      repository.getImage(apod)
+          .doOnSuccess(pathConsumer)
+          .doOnError(throwable::postValue)
+          .subscribe();
+  }
+
+// If app gets stopped, this gets executed. It empties the bucket of pending tasks.
   @SuppressWarnings("unused")
   @OnLifecycleEvent(Event.ON_STOP)
   private void disposePending() {
