@@ -13,5 +13,6 @@
 
   <dimen name="info_label_gap">8dp</dimen>
   <dimen name="info_item_spacing">8dp</dimen>
+  <dimen name="login_button_padding">8dp</dimen>
 
 </resources>

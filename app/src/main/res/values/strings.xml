@@ -17,5 +17,6 @@
   <string name="web_url_format">https://apod.nasa.gov/apod/ap%1$ty%1$tm%1$td.html</string>
   <string name="url_label">Media URL:</string>
   <string name="hd_url_label">HD URL:</string>
+  <string name="sign_out">Sign out</string>
 
 </resources>

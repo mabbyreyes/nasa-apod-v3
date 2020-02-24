@@ -90,7 +90,7 @@ public class ApodRecyclerAdapter extends RecyclerView.Adapter<Holder> {
           picasso.load(apod.getApod().getUrl()).into(thumbnail);
         }
       } else {
-        picasso.load(R.drawable.ic_slow_motion_video).into(thumbnail);
+        thumbnail.setImageResource(R.drawable.ic_slow_motion_video);
       }
       thumbnail.setContentDescription(apod.getApod().getTitle());
       view.setOnClickListener((v) -> listener.onClick(v, apod.getApod(), position));
