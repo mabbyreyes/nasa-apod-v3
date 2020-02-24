@@ -8,12 +8,14 @@ CREATE TABLE IF NOT EXISTS `Apod`
     `title`       TEXT                              NOT NULL COLLATE NOCASE,
     `description` TEXT                              NOT NULL,
     `copyright`   TEXT,
-    `media_type`  TEXT                              NOT NULL,
+    `media_type`  INTEGER                           NOT NULL,
     `url`         TEXT                              NOT NULL,
     `hd_url`      TEXT
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS `index_Apod_date` ON `Apod` (`date`);
+
+CREATE INDEX IF NOT EXISTS `index_Apod_title` ON `Apod` (`title`);
 
 CREATE TABLE IF NOT EXISTS `Access`
 (
