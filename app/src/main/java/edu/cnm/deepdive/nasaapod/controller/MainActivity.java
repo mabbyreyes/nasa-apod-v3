@@ -1,10 +1,14 @@
 package edu.cnm.deepdive.nasaapod.controller;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.Gravity;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.Toast;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
@@ -17,6 +21,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import edu.cnm.deepdive.android.DateTimePickerFragment;
 import edu.cnm.deepdive.android.DateTimePickerFragment.Mode;
 import edu.cnm.deepdive.nasaapod.R;
+import edu.cnm.deepdive.nasaapod.service.GoogleSignInRepository;
 import edu.cnm.deepdive.nasaapod.viewmodel.MainViewModel;
 import java.util.Calendar;
 import java.util.Date;
@@ -40,7 +45,32 @@ public class MainActivity extends AppCompatActivity {
     setupCalendarPicker();
   }
 
-  // shows progress and tells viewmodel to display image for date.
+  @Override
+  public boolean onCreateOptionsMenu(Menu menu) {
+    super.onCreateOptionsMenu(menu);
+    getMenuInflater().inflate(R.menu.main_options, menu);
+    return true;
+  }
+
+  @Override
+  public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+    boolean handled = true;
+    //noinspection SwitchStatementWithTooFewBranches
+    switch (item.getItemId()) {
+      case R.id.sign_out:
+        GoogleSignInRepository.getInstance().signOut()
+            .addOnCompleteListener((task) -> {
+              Intent intent = new Intent(this, LoginActivity.class);
+              intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+              startActivity(intent);
+            });
+        break;
+      default:
+        handled = super.onOptionsItemSelected(item);
+    }
+    return handled;
+  }
+
   public void loadApod(Date date) {
     setProgressVisibility(View.VISIBLE);
     viewModel.setApodDate(date);
@@ -88,7 +118,6 @@ public class MainActivity extends AppCompatActivity {
     });
   }
 
-  // when user clicks on calendar and picks ok to date, loads apod method.
   private void setupCalendarPicker() {
     calendar = Calendar.getInstance();
     FloatingActionButton calendarFab = findViewById(R.id.calendar_fab);
