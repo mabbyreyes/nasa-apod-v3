@@ -7,7 +7,7 @@ import android.net.Uri;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.Environment;
-import android.provider.MediaStore.Audio.Media;
+import android.provider.MediaStore.Images.Media;
 import android.provider.MediaStore.MediaColumns;
 import android.webkit.MimeTypeMap;
 import androidx.annotation.NonNull;
