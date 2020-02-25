@@ -11,7 +11,6 @@ import android.provider.MediaStore.Images.Media;
 import android.provider.MediaStore.MediaColumns;
 import android.webkit.MimeTypeMap;
 import androidx.annotation.NonNull;
-import androidx.core.app.JobIntentService;
 import androidx.lifecycle.LiveData;
 import edu.cnm.deepdive.nasaapod.BuildConfig;
 import edu.cnm.deepdive.nasaapod.model.dao.AccessDao;
@@ -29,7 +28,6 @@ import io.reactivex.SingleSource;
 import io.reactivex.schedulers.Schedulers;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOError;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -50,6 +48,7 @@ public class ApodRepository {
   // % placeholder for first parameter, t is date or time, Y is 4 digit year, m is two digit month, d is two digit,
   private static final String LOCAL_FILENAME_FORMAT = "%1$tY%1$tm%1$td-%2$s";
   private static final String MEDIA_RECORD_FAILURE = "Unable to create MediaStore record.";
+  private static final int BUFFER_SIZE = 1 << 14;
 
   private final ApodDatabase database;
   private final ApodService nasa;
@@ -106,7 +105,6 @@ public class ApodRepository {
   }
 
   public Single<String> getImage(@NonNull Apod apod) {
-    // TODO Add local file download & reference.
     boolean canBeLocal = (apod.getMediaType() == MediaType.IMAGE);
     File file = canBeLocal ? getFile(apod) : null;
     return Maybe.fromCallable(() ->
@@ -116,7 +114,7 @@ public class ApodRepository {
             nasa.getFile(apod.getUrl())
             .map((body) -> {
               try {
-                return download(body, file);
+                return downloadCache(body, file);
               } catch (IOException ex) {
                 return apod.getUrl();
               }
@@ -144,7 +142,7 @@ public class ApodRepository {
             copy(input, output);
           } catch (IOException ex) {
             resolver.delete(uri, null, null);
-            // TODO Throw new exception?
+            throw ex;
           }
           return true;
         })
@@ -170,7 +168,7 @@ public class ApodRepository {
   }
 
   private long copy(InputStream input, OutputStream output) throws IOException {
-    byte[] buffer = new byte[16_384];
+    byte[] buffer = new byte[BUFFER_SIZE];
     long totalBytes = 0;
     int bytesRead;
     do {
@@ -179,11 +177,12 @@ public class ApodRepository {
         totalBytes += bytesRead;
       }
     } while (bytesRead >= 0);
+    output.flush();
     return totalBytes;
   }
 
   // Download method.
-  private String download(ResponseBody body, File file) throws IOException {
+  private String downloadCache(ResponseBody body, File file) throws IOException {
     try (
         // Requesting image, recieving bytes.
         InputStream input = body.byteStream();
@@ -191,16 +190,7 @@ public class ApodRepository {
         OutputStream output = new FileOutputStream(file);
         ) {
       // Read bytes from NASA, writes to server. -1 and done.
-      byte[] buffer = new byte[16_384];
-      int bytesRead = 0;
-      while (bytesRead >= 0) {
-        bytesRead = input.read(buffer);
-        if (bytesRead > 0) {
-          output.write(buffer, 0, bytesRead);
-        }
-      }
-      // Gets put in operating system. Flush writes them out.
-      output.flush();
+      copy(input, output);
       return file.toURI().toString();
     }
   }
