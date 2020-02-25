@@ -19,5 +19,7 @@
   <string name="hd_url_label">HD URL:</string>
   <string name="sign_out">Sign out</string>
   <string name="login_failure">Unable to sign in with the provided credentials</string>
+  <string name="download_image">Download image</string>
+  <string name="image_downloaded">Image downloaded!</string>
 
 </resources>

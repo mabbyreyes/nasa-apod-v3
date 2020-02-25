@@ -14,17 +14,21 @@ import edu.cnm.deepdive.nasaapod.model.repository.ApodRepository;
 import edu.cnm.deepdive.nasaapod.service.ApodService;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.functions.Action;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 import java.text.ParseException;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 // Implements indicates its a lifetime observer.
 public class MainViewModel extends AndroidViewModel implements LifecycleObserver {
 
   private final MutableLiveData<Apod> apod;
   private final MutableLiveData<Throwable> throwable;
+  private final MutableLiveData<Set<String>> permissions;
   private final CompositeDisposable pending;
   private final ApodRepository repository;
 
@@ -33,6 +37,8 @@ public class MainViewModel extends AndroidViewModel implements LifecycleObserver
     repository = ApodRepository.getInstance();
     apod = new MutableLiveData<>();
     throwable = new MutableLiveData<>();
+    // Knows that set of string goes in angled brackets, and hashset is string.
+    permissions = new MutableLiveData<>(new HashSet<>());
     pending = new CompositeDisposable();
     Date today = new Date();
     String formattedDate = ApodService.DATE_FORMATTER.format(today);
@@ -54,6 +60,27 @@ public class MainViewModel extends AndroidViewModel implements LifecycleObserver
 
   public LiveData<Throwable> getThrowable() {
     return throwable;
+  }
+
+  // Never get for MutableLiveData, always LiveData.
+  public LiveData<Set<String>> getPermissions() {
+    return permissions;
+  }
+
+  //  Returns true if value in set.
+  public void grantPermission(String permission) {
+    Set<String> permissions = this.permissions.getValue();
+    if (permissions.add(permission)) {
+      this.permissions.setValue(permissions);
+    }
+  }
+
+  // False if it wasn't there in the first place, nothings changed.
+  public void revokePermission(String permission) {
+    Set<String> permissions = this.permissions.getValue();
+    if (permissions.remove(permission)) {
+      this.permissions.setValue(permissions);
+    }
   }
 
   // Puts in live data, if fails, puts in throwable.
@@ -85,6 +112,18 @@ public class MainViewModel extends AndroidViewModel implements LifecycleObserver
                 // Unsuccessful then throws.
                 throwable::setValue
             )
+    );
+  }
+
+  public void downloadImage(@NonNull Apod apod, Action onSuccess) {
+    throwable.setValue(null);
+    pending.add(
+        repository.downloadImage(apod)
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribe(
+            onSuccess,
+            throwable::setValue
+        )
     );
   }
 
